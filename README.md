@@ -1,22 +1,22 @@
-# WarEra – Ruta cutiilor
+# Region Travel Calculator – WarEra
 
-Pagină care calculează ordinea optimă de vizitare a regiunilor cu cutii, pornind din regiunea curentă.
+A page that works out the best order to visit the regions with boxes, starting from your current region.
 
-## Deploy pe Netlify
+## Deploy to Netlify
 
-**Varianta 1 – din Git (recomandat)**
-1. Urcă folderul într-un repo GitHub.
-2. Netlify → Add new site → Import from Git → alege repo-ul.
-3. Setările se iau automat din `netlify.toml`. Deploy.
+**Option 1 – from Git (recommended)**
+1. Push this folder to a GitHub repo.
+2. Netlify → Add new site → Import from Git → pick the repo.
+3. Settings are read automatically from `netlify.toml`. Deploy.
 
-**Varianta 2 – din terminal**
+**Option 2 – from the terminal**
 ```bash
 npm i -g netlify-cli
 netlify login
 netlify deploy --prod
 ```
 
-Notă: drag & drop pe Netlify nu publică funcția `/api/regions`. Pagina încearcă atunci API-ul WarEra direct, care poate fi blocat de CORS.
+Note: drag & drop on Netlify doesn't publish the `/api/regions` function. The page then falls back to calling the WarEra API directly, which may be blocked by CORS.
 
 ## Local
 ```bash

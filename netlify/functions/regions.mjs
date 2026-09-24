@@ -1,4 +1,4 @@
-// Proxy pentru lista de regiuni WarEra (evită problemele de CORS și pune cache 5 min)
+// Proxy for the WarEra region list (avoids CORS issues and caches for 5 min)
 export default async () => {
   const res = await fetch("https://api2.warera.io/trpc/region.getRegionsObject");
   return new Response(await res.text(), {

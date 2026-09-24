@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ro">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ruta cutiilor – WarEra</title>
+<title>Region Travel Calculator – WarEra</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,7 +65,7 @@
     border: 1px solid var(--line); border-radius: 999px; padding: .2rem .3rem .2rem .7rem; font-size: .9rem;
   }
   #chips button { border: 0; padding: 0 .35rem; font-size: 1.1rem; line-height: 1; color: var(--muted); }
-  #chips:empty::after { content: "Nicio cutie adăugată încă."; color: var(--muted); font-size: .9rem; }
+  #chips:empty::after { content: "No boxes added yet."; color: var(--muted); font-size: .9rem; }
 
   fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: .25rem; }
   legend { font-weight: 600; font-size: .95rem; margin-bottom: .25rem; }
@@ -100,33 +100,33 @@
 </head>
 <body>
 <header>
-  <h1>Ruta cutiilor</h1>
-  <p>Pune regiunea în care ești și regiunile cu cutii. Primești ordinea în care să le vizitezi ca drumul total să fie cât mai scurt.</p>
+  <h1>Region Travel Calculator</h1>
+  <p>Enter the region you’re in and the regions with boxes. You’ll get the order to visit them in so the total trip is as short as possible.</p>
 </header>
 
 <main>
-  <section class="panel" aria-label="Date de intrare">
-    <label class="field" for="start">Regiunea ta</label>
-    <input type="text" id="start" list="regions" placeholder="Nume, ID sau link" autocomplete="off">
+  <section class="panel" aria-label="Input">
+    <label class="field" for="start">Your region</label>
+    <input type="text" id="start" list="regions" placeholder="Name, ID or link" autocomplete="off">
 
-    <label class="field" for="box">Regiuni cu cutii</label>
+    <label class="field" for="box">Regions with boxes</label>
     <div class="row">
-      <input type="text" id="box" list="regions" placeholder="Nume, ID sau link" autocomplete="off">
-      <button type="button" id="add">Adaugă</button>
+      <input type="text" id="box" list="regions" placeholder="Name, ID or link" autocomplete="off">
+      <button type="button" id="add">Add</button>
     </div>
     <ul id="chips"></ul>
 
     <fieldset>
-      <legend>Optimizează după</legend>
-      <label><input type="radio" name="mode" value="km" checked> Kilometri</label>
-      <label><input type="radio" name="mode" value="hops"> Regiuni traversate</label>
+      <legend>Optimize for</legend>
+      <label><input type="radio" name="mode" value="km" checked> Kilometers</label>
+      <label><input type="radio" name="mode" value="hops"> Regions crossed</label>
     </fieldset>
 
-    <button type="button" id="go" class="primary">Calculează ruta</button>
+    <button type="button" id="go" class="primary">Calculate route</button>
     <p id="msg" role="status"></p>
   </section>
 
-  <section class="result" aria-label="Rezultat">
+  <section class="result" aria-label="Result">
     <div id="map"></div>
     <ol id="route"></ol>
     <p id="total"></p>
@@ -146,9 +146,9 @@ let map, layer;
 const label = (r) => `${r.name} (${r.mainCity})`;
 const msg = (t) => { $("#msg").textContent = t; };
 
-/* ---------- Date ---------- */
+/* ---------- Data ---------- */
 async function loadRegions() {
-  msg("Se încarcă regiunile…");
+  msg("Loading regions…");
   const sources = ["/api/regions", "https://api2.warera.io/trpc/region.getRegionsObject"];
   for (const url of sources) {
     try {
@@ -156,10 +156,10 @@ async function loadRegions() {
       if (!res.ok) continue;
       regions = (await res.json()).result.data;
       if (regions && Object.keys(regions).length) break;
-    } catch (_) { /* încearcă următoarea sursă */ }
+    } catch (_) { /* try the next source */ }
   }
   if (!Object.keys(regions).length) {
-    msg("Nu am putut încărca regiunile. Reîncarcă pagina.");
+    msg("Couldn’t load the regions. Please reload the page.");
     return;
   }
   const dl = $("#regions");
@@ -187,7 +187,7 @@ function resolve(text) {
     || null;
 }
 
-/* ---------- Salvare locală ---------- */
+/* ---------- Local save ---------- */
 function save() {
   try {
     localStorage.setItem("route", JSON.stringify({ start: $("#start").value, boxes }));
@@ -203,7 +203,7 @@ function restore() {
   } catch (_) {}
 }
 
-/* ---------- Cutii ---------- */
+/* ---------- Boxes ---------- */
 function renderChips() {
   const ul = $("#chips");
   ul.innerHTML = "";
@@ -213,7 +213,7 @@ function renderChips() {
     const x = document.createElement("button");
     x.type = "button";
     x.textContent = "×";
-    x.setAttribute("aria-label", `Șterge ${regions[id].name}`);
+    x.setAttribute("aria-label", `Remove ${regions[id].name}`);
     x.onclick = () => { boxes = boxes.filter((b) => b !== id); renderChips(); save(); };
     li.appendChild(x);
     ul.appendChild(li);
@@ -223,7 +223,7 @@ function renderChips() {
 function addBox() {
   const input = $("#box");
   const id = resolve(input.value);
-  if (!id) { msg("Nu găsesc regiunea asta. Alege din listă sau lipește un ID."); return; }
+  if (!id) { msg("Can’t find that region. Pick one from the list or paste an ID."); return; }
   if (!boxes.includes(id)) boxes.push(id);
   input.value = "";
   msg("");
@@ -232,7 +232,7 @@ function addBox() {
   input.focus();
 }
 
-/* ---------- Distanțe ---------- */
+/* ---------- Distances ---------- */
 function haversine([lng1, lat1], [lng2, lat2]) {
   const rad = Math.PI / 180;
   const dlat = (lat2 - lat1) * rad, dlng = (lng2 - lng1) * rad;
@@ -252,12 +252,12 @@ function bfs(from) {
   return d;
 }
 
-/* ---------- Ruta ---------- */
+/* ---------- Route ---------- */
 const BIG = 1e9;
 const length = (path, c) => path.reduce((s, v, i) => (i ? s + c[path[i - 1]][v] : 0), 0);
 
 function solve(n, c) {
-  // Până la 10 cutii: căutare completă cu tăiere (rezultat optim)
+  // Up to 10 boxes: exhaustive search with pruning (optimal result)
   if (n - 1 <= 10) {
     let best = Infinity, bestPath = null;
     const path = [0], used = Array(n).fill(false);
@@ -275,7 +275,7 @@ function solve(n, c) {
     })(0);
     return bestPath;
   }
-  // Peste 10: cel mai apropiat vecin + 2-opt
+  // Over 10: nearest neighbor + 2-opt
   let path = [0];
   const left = new Set([...Array(n).keys()].slice(1));
   while (left.size) {
@@ -299,9 +299,9 @@ function solve(n, c) {
 
 function calculate() {
   const start = resolve($("#start").value);
-  if (!start) { msg("Alege regiunea în care ești."); return; }
+  if (!start) { msg("Pick the region you’re in."); return; }
   const list = boxes.filter((b) => b !== start);
-  if (!list.length) { msg("Adaugă cel puțin o regiune cu cutie."); return; }
+  if (!list.length) { msg("Add at least one region with a box."); return; }
   msg("");
   save();
 
@@ -314,9 +314,9 @@ function calculate() {
   render(order.map((i) => pts[i]), order, km, hops, mode);
 }
 
-/* ---------- Afișare ---------- */
-const fmtKm = (x) => `${Math.round(x).toLocaleString("ro-RO")} km`;
-const fmtHops = (x) => (x >= BIG ? "fără drum" : `${x} ${x === 1 ? "regiune" : "regiuni"}`);
+/* ---------- Rendering ---------- */
+const fmtKm = (x) => `${Math.round(x).toLocaleString("en-US")} km`;
+const fmtHops = (x) => (x >= BIG ? "no path" : `${x} ${x === 1 ? "region" : "regions"}`);
 
 function render(ids, order, km, hops, mode) {
   const ol = $("#route");
@@ -327,7 +327,7 @@ function render(ids, order, km, hops, mode) {
     const r = regions[id];
     const li = document.createElement("li");
     if (k === 0) li.className = "start";
-    let leg = "Punct de plecare";
+    let leg = "Starting point";
     if (k > 0) {
       const a = order[k - 1], b = order[k];
       totalKm += km[a][b];
@@ -342,7 +342,7 @@ function render(ids, order, km, hops, mode) {
     ol.appendChild(li);
   });
 
-  const hopsText = totalHops >= BIG ? "unele cutii nu au drum pe uscat" : fmtHops(totalHops);
+  const hopsText = totalHops >= BIG ? "some boxes have no land path" : fmtHops(totalHops);
   $("#total").textContent = mode === "km"
     ? `Total: ${fmtKm(totalKm)} (${hopsText})`
     : `Total: ${hopsText} (${fmtKm(totalKm)})`;
@@ -374,7 +374,7 @@ function drawMap(ids) {
   map.fitBounds(L.latLngBounds(latlngs).pad(0.2));
 }
 
-/* ---------- Evenimente ---------- */
+/* ---------- Events ---------- */
 $("#add").onclick = addBox;
 $("#box").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addBox(); } });
 $("#start").addEventListener("change", save);
